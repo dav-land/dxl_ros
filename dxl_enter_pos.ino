@@ -45,7 +45,6 @@ char logBuffer[128];
 int pos1 = 2000, pos2 = 2000;
 
 void onPanPos(const std_msgs::Int16 &pos){
-  nh.loginfo("In onPanPos");
   pos1 = pos.data;
 }
 
