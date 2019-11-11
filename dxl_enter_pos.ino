@@ -14,7 +14,7 @@
 
 
 #define BAUDRATE                        57600
-#define DEVICENAME                      "/dev/cu.usbmodem14301"   // Check which port is being used on your controller
+#define DEVICENAME                      "/dev/ttyACM0"   // Check which port is being used on your controller
 // ex) Windows: "COM1"   Linux: "/dev/ttyUSB0"
 
 #define TORQUE_ENABLE                   1                   // Value for enabling the torque
@@ -24,7 +24,7 @@
 #define DXL_MOVING_STATUS_THRESHOLD1     20                  // Dynamixel moving status threshold
 #define DXL_MINIMUM_POSITION_VALUE2      775                 // Dynamixel will rotate between this value
 #define DXL_MAXIMUM_POSITION_VALUE2      3250                // and this value (note that the Dynamixel would not move when the position value is out of movable range. Check e-manual about the range of the Dynamixel you use.)
-#define DXL_MOVING_STATUS_THRESHOLD2     20                  // Dynamixel moving status threshold
+#define DXL_MOVING_STATUS_THRESHOLD2     5                  // Dynamixel moving status threshold
 
 #define ESC_ASCII_VALUE                 0x1b
 
@@ -41,15 +41,24 @@ ros::Publisher tiltPos("tilt_cur_position", &dyna2_pos);
 ros::Subscriber<std_msgs::Int16> panGoal("pan_goal_position", &onPanPos);
 ros::Subscriber<std_msgs::Int16> tiltGoal("tilt_goal_position", &onTiltPos);
 
+
 char logBuffer[128];
 int pos1 = 2000, pos2 = 2000;
 
-void onPanPos(const std_msgs::Int16 &pos){
+void onPanPos(const std_msgs::Int16 &pos) {
   pos1 = pos.data;
+  if(pos.data > 4095)
+    pos1 = 4095;
+  if(pos.data < 0)
+    pos1 = 0; 
 }
 
-void onTiltPos(const std_msgs::Int16 &pos){
+void onTiltPos(const std_msgs::Int16 &pos) {
   pos2 = pos.data;
+  if(pos.data > 3250)
+    pos2 = 3250;
+  if(pos.data < 750)
+    pos2 = 750;
 }
 
 void setup() {
@@ -60,6 +69,8 @@ void setup() {
   nh.advertise(tiltPos);
   nh.subscribe(panGoal);
   nh.subscribe(tiltGoal);
+
+  pinMode(23, INPUT_PULLDOWN);
 
   // put your setup code here, to run once:
   Serial.begin(BAUDRATE);
@@ -138,6 +149,59 @@ void setup() {
 
   while (1)
   {
+    if (digitalRead(23)) {
+      // Open port
+      if (portHandler->openPort())
+      {
+        nh.loginfo("Succeeded to open the port!\n");
+      }
+      else
+      {
+        nh.loginfo("Failed to open the port!\n");
+        nh.loginfo("Press any key to terminate...\n");
+        return;
+      }
+
+      // Set port baudrate
+      if (portHandler->setBaudRate(BAUDRATE))
+      {
+        nh.loginfo("Succeeded to change the baudrate!\n");
+      }
+      else
+      {
+        nh.loginfo("Failed to change the baudrate!\n");
+        nh.loginfo("Press any key to terminate...\n");
+        return;
+      }
+
+      // Enable Dynamixel Torque
+      dxl_comm_result = packetHandler->write1ByteTxRx(portHandler, 1, ADDR_PRO_TORQUE_ENABLE, TORQUE_ENABLE, &dxl_error);
+      if (dxl_comm_result != COMM_SUCCESS)
+      {
+        packetHandler->getTxRxResult(dxl_comm_result);
+      }
+      else if (dxl_error != 0)
+      {
+        packetHandler->getRxPacketError(dxl_error);
+      }
+      else
+      {
+        nh.loginfo("Dynamixel 1 has been successfully connected \n");
+      }
+      dxl_comm_result = packetHandler->write1ByteTxRx(portHandler, 2, ADDR_PRO_TORQUE_ENABLE, TORQUE_ENABLE, &dxl_error);
+      if (dxl_comm_result != COMM_SUCCESS)
+      {
+        packetHandler->getTxRxResult(dxl_comm_result);
+      }
+      else if (dxl_error != 0)
+      {
+        packetHandler->getRxPacketError(dxl_error);
+      }
+      else
+      {
+        nh.loginfo("Dynamixel 2 has been successfully connected \n");
+      }
+    }
     // Write goal position
     dxl_comm_result = packetHandler->write4ByteTxRx(portHandler, 1, ADDR_PRO_GOAL_POSITION, pos1, &dxl_error);
     if (dxl_comm_result != COMM_SUCCESS)
