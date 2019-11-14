@@ -150,6 +150,10 @@ void setup() {
   while (1)
   {
     if (digitalRead(23)) {
+      Serial.end();
+
+      
+      Serial.begin(BAUDRATE);
       // Open port
       if (portHandler->openPort())
       {
