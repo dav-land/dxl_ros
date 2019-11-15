@@ -1,4 +1,3 @@
-
 #include <DynamixelSDK.h>
 #include <ros.h>
 #include <std_msgs/Int16.h>
@@ -71,20 +70,24 @@ void onTiltPos(const std_msgs::Int16 &pos) {
     pos2 = 750;
 }
 
-void onPanSpeed(const std_msgs::Int16 &sp){
+void onPanSpeed(const std_msgs::Int16 &sp) {
   speed1 = sp.data;
-  if(speed1 < 0)
+  if (speed1 < 0)
     speed1 = 0;
-  if(speed1 > 1023)
+  if (speed1 > 1023)
     speed1 = 1023;
+  //  sprintf(logBuffer, "Speed1: %d", speed1);
+  //  nh.loginfo(logBuffer);
 }
 
-void onTiltSpeed(const std_msgs::Int16 &sp){
+void onTiltSpeed(const std_msgs::Int16 &sp) {
   speed2 = sp.data;
-  if(speed2 < 0)
+  if (speed2 < 0)
     speed2 = 0;
-  if(speed2 > 1023)
+  if (speed2 > 1023)
     speed2 = 1023;
+  //   sprintf(logBuffer, "Speed2: %d", speed2);
+  //  nh.loginfo(logBuffer);
 }
 
 void setup() {
@@ -99,8 +102,6 @@ void setup() {
   nh.subscribe(tiltGoal);
   nh.subscribe(panSpeedGoal);
   nh.subscribe(tiltSpeedGoal);
-
-  pinMode(23, INPUT_PULLDOWN);
 
   // put your setup code here, to run once:
   Serial.begin(BAUDRATE);
@@ -181,27 +182,8 @@ void setup() {
 
   while (1)
   {
-    // Write goal speed 1
-    dxl_comm_result = packetHandler->write4ByteTxRx(portHandler, 1, ADDR_PRO_MOVING_SPEED, speed1, &dxl_error);
-    if (dxl_comm_result != COMM_SUCCESS)
-    {
-      packetHandler->getTxRxResult(dxl_comm_result);
-    }
-    else if (dxl_error != 0)
-    {
-      packetHandler->getRxPacketError(dxl_error);
-    }
-    // Write goal speed 2
-    dxl_comm_result = packetHandler->write4ByteTxRx(portHandler, 2, ADDR_PRO_MOVING_SPEED, speed2, &dxl_error);
-    if (dxl_comm_result != COMM_SUCCESS)
-    {
-      packetHandler->getTxRxResult(dxl_comm_result);
-    }
-    else if (dxl_error != 0)
-    {
-      packetHandler->getRxPacketError(dxl_error);
-    }
-    // Write goal position
+
+      // Write goal position
     dxl_comm_result = packetHandler->write4ByteTxRx(portHandler, 1, ADDR_PRO_GOAL_POSITION, pos1, &dxl_error);
     if (dxl_comm_result != COMM_SUCCESS)
     {
@@ -222,6 +204,27 @@ void setup() {
       packetHandler->getRxPacketError(dxl_error);
     }
 
+//        // Write goal speed
+//    dxl_comm_result = packetHandler->write4ByteTxRx(portHandler, 1, ADDR_PRO_MOVING_SPEED, speed1, &dxl_error);
+//    if (dxl_comm_result != COMM_SUCCESS)
+//    {
+//      packetHandler->getTxRxResult(dxl_comm_result);
+//    }
+//    else if (dxl_error != 0)
+//    {
+//      packetHandler->getRxPacketError(dxl_error);
+//    }
+//    // Write goal speed
+//    dxl_comm_result = packetHandler->write4ByteTxRx(portHandler, 2, ADDR_PRO_MOVING_SPEED, speed2, &dxl_error);
+//    if (dxl_comm_result != COMM_SUCCESS)
+//    {
+//      packetHandler->getTxRxResult(dxl_comm_result);
+//    }
+//    else if (dxl_error != 0)
+//    {
+//      packetHandler->getRxPacketError(dxl_error);
+//    }
+
     do
     {
       // Read present position
@@ -234,6 +237,14 @@ void setup() {
       {
         packetHandler->getRxPacketError(dxl_error);
       }
+
+      //          nh.loginfo("[ID:1");
+      //          sprintf(logBuffer,"Goal Position: %d",pos1);
+      //          nh.loginfo(logBuffer);
+      //          sprintf(logBuffer,"Present Position: %d",dxl_present_position1);
+      //          nh.loginfo(logBuffer);
+
+
 
     } while ((abs(pos1 - dxl_present_position1) > DXL_MOVING_STATUS_THRESHOLD1));
     do
@@ -249,29 +260,35 @@ void setup() {
         packetHandler->getRxPacketError(dxl_error);
       }
 
+      //         nh.loginfo("[ID:2");
+      //          sprintf(logBuffer,"Goal Position: %d",pos2);
+      //          nh.loginfo(logBuffer);
+      //          sprintf(logBuffer,"Present Position: %d",dxl_present_position2);
+      //          nh.loginfo(logBuffer);
+
     } while ((abs(pos2 - dxl_present_position2) > DXL_MOVING_STATUS_THRESHOLD2));
 
     // Read present speed 1
-      dxl_comm_result = packetHandler->read4ByteTxRx(portHandler, 1, ADDR_PRO_PRESENT_SPEED, (uint32_t*)&dxl_present_speed1, &dxl_error);
-      if (dxl_comm_result != COMM_SUCCESS)
-      {
-        packetHandler->getTxRxResult(dxl_comm_result);
-      }
-      else if (dxl_error != 0)
-      {
-        packetHandler->getRxPacketError(dxl_error);
-      }
-      // Read present speed 2
-      dxl_comm_result = packetHandler->read4ByteTxRx(portHandler, 2, ADDR_PRO_PRESENT_SPEED, (uint32_t*)&dxl_present_speed2, &dxl_error);
-      if (dxl_comm_result != COMM_SUCCESS)
-      {
-        packetHandler->getTxRxResult(dxl_comm_result);
-      }
-      else if (dxl_error != 0)
-      {
-        packetHandler->getRxPacketError(dxl_error);
-      }
-    
+    dxl_comm_result = packetHandler->read4ByteTxRx(portHandler, 1, ADDR_PRO_PRESENT_SPEED, (uint32_t*)&dxl_present_speed1, &dxl_error);
+    if (dxl_comm_result != COMM_SUCCESS)
+    {
+      packetHandler->getTxRxResult(dxl_comm_result);
+    }
+    else if (dxl_error != 0)
+    {
+      packetHandler->getRxPacketError(dxl_error);
+    }
+    // Read present speed 2
+    dxl_comm_result = packetHandler->read4ByteTxRx(portHandler, 2, ADDR_PRO_PRESENT_SPEED, (uint32_t*)&dxl_present_speed2, &dxl_error);
+    if (dxl_comm_result != COMM_SUCCESS)
+    {
+      packetHandler->getTxRxResult(dxl_comm_result);
+    }
+    else if (dxl_error != 0)
+    {
+      packetHandler->getRxPacketError(dxl_error);
+    }
+
     //ROS
     dyna1_pos.data = dxl_present_position1;
     dyna2_pos.data = dxl_present_position2;
