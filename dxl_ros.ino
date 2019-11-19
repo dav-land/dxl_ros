@@ -122,10 +122,10 @@ void setup() {
 
   int dxl_comm_result = COMM_TX_FAIL;             // Communication result
   uint8_t dxl_error = 0;                          // Dynamixel error
-  int32_t dxl_present_position1 = 0;               // Present position
-  int32_t dxl_present_position2 = 0;
-  int32_t dxl_present_speed1 = 0;
-  int32_t dxl_present_speed2 = 0;
+  int16_t dxl_present_position1 = 0;               // Present position
+  int16_t dxl_present_position2 = 0;
+  int16_t dxl_present_speed1 = 0;
+  int16_t dxl_present_speed2 = 0;
 
   // Open port
   if (portHandler->openPort())
@@ -184,7 +184,7 @@ void setup() {
   {
 
       // Write goal position
-    dxl_comm_result = packetHandler->write4ByteTxRx(portHandler, 1, ADDR_PRO_GOAL_POSITION, pos1, &dxl_error);
+    dxl_comm_result = packetHandler->write2ByteTxRx(portHandler, 1, ADDR_PRO_GOAL_POSITION, pos1, &dxl_error);
     if (dxl_comm_result != COMM_SUCCESS)
     {
       packetHandler->getTxRxResult(dxl_comm_result);
@@ -194,7 +194,7 @@ void setup() {
       packetHandler->getRxPacketError(dxl_error);
     }
     // Write goal position
-    dxl_comm_result = packetHandler->write4ByteTxRx(portHandler, 2, ADDR_PRO_GOAL_POSITION, pos2, &dxl_error);
+    dxl_comm_result = packetHandler->write2ByteTxRx(portHandler, 2, ADDR_PRO_GOAL_POSITION, pos2, &dxl_error);
     if (dxl_comm_result != COMM_SUCCESS)
     {
       packetHandler->getTxRxResult(dxl_comm_result);
@@ -204,31 +204,31 @@ void setup() {
       packetHandler->getRxPacketError(dxl_error);
     }
 
-//        // Write goal speed
-//    dxl_comm_result = packetHandler->write4ByteTxRx(portHandler, 1, ADDR_PRO_MOVING_SPEED, speed1, &dxl_error);
-//    if (dxl_comm_result != COMM_SUCCESS)
-//    {
-//      packetHandler->getTxRxResult(dxl_comm_result);
-//    }
-//    else if (dxl_error != 0)
-//    {
-//      packetHandler->getRxPacketError(dxl_error);
-//    }
-//    // Write goal speed
-//    dxl_comm_result = packetHandler->write4ByteTxRx(portHandler, 2, ADDR_PRO_MOVING_SPEED, speed2, &dxl_error);
-//    if (dxl_comm_result != COMM_SUCCESS)
-//    {
-//      packetHandler->getTxRxResult(dxl_comm_result);
-//    }
-//    else if (dxl_error != 0)
-//    {
-//      packetHandler->getRxPacketError(dxl_error);
-//    }
+        // Write goal speed
+    dxl_comm_result = packetHandler->write2ByteTxRx(portHandler, 1, ADDR_PRO_MOVING_SPEED, speed1, &dxl_error);
+    if (dxl_comm_result != COMM_SUCCESS)
+    {
+      packetHandler->getTxRxResult(dxl_comm_result);
+    }
+    else if (dxl_error != 0)
+    {
+      packetHandler->getRxPacketError(dxl_error);
+    }
+    // Write goal speed
+    dxl_comm_result = packetHandler->write2ByteTxRx(portHandler, 2, ADDR_PRO_MOVING_SPEED, speed2, &dxl_error);
+    if (dxl_comm_result != COMM_SUCCESS)
+    {
+      packetHandler->getTxRxResult(dxl_comm_result);
+    }
+    else if (dxl_error != 0)
+    {
+      packetHandler->getRxPacketError(dxl_error);
+    }
 
     do
     {
       // Read present position
-      dxl_comm_result = packetHandler->read4ByteTxRx(portHandler, 1, ADDR_PRO_PRESENT_POSITION, (uint32_t*)&dxl_present_position1, &dxl_error);
+      dxl_comm_result = packetHandler->read2ByteTxRx(portHandler, 1, ADDR_PRO_PRESENT_POSITION, (uint16_t*)&dxl_present_position1, &dxl_error);
       if (dxl_comm_result != COMM_SUCCESS)
       {
         packetHandler->getTxRxResult(dxl_comm_result);
@@ -250,7 +250,7 @@ void setup() {
     do
     {
       // Read present position
-      dxl_comm_result = packetHandler->read4ByteTxRx(portHandler, 2, ADDR_PRO_PRESENT_POSITION, (uint32_t*)&dxl_present_position2, &dxl_error);
+      dxl_comm_result = packetHandler->read2ByteTxRx(portHandler, 2, ADDR_PRO_PRESENT_POSITION, (uint16_t*)&dxl_present_position2, &dxl_error);
       if (dxl_comm_result != COMM_SUCCESS)
       {
         packetHandler->getTxRxResult(dxl_comm_result);
@@ -269,7 +269,7 @@ void setup() {
     } while ((abs(pos2 - dxl_present_position2) > DXL_MOVING_STATUS_THRESHOLD2));
 
     // Read present speed 1
-    dxl_comm_result = packetHandler->read4ByteTxRx(portHandler, 1, ADDR_PRO_PRESENT_SPEED, (uint32_t*)&dxl_present_speed1, &dxl_error);
+    dxl_comm_result = packetHandler->read2ByteTxRx(portHandler, 1, ADDR_PRO_PRESENT_SPEED, (uint16_t*)&dxl_present_speed1, &dxl_error);
     if (dxl_comm_result != COMM_SUCCESS)
     {
       packetHandler->getTxRxResult(dxl_comm_result);
@@ -279,7 +279,7 @@ void setup() {
       packetHandler->getRxPacketError(dxl_error);
     }
     // Read present speed 2
-    dxl_comm_result = packetHandler->read4ByteTxRx(portHandler, 2, ADDR_PRO_PRESENT_SPEED, (uint32_t*)&dxl_present_speed2, &dxl_error);
+    dxl_comm_result = packetHandler->read2ByteTxRx(portHandler, 2, ADDR_PRO_PRESENT_SPEED, (uint16_t*)&dxl_present_speed2, &dxl_error);
     if (dxl_comm_result != COMM_SUCCESS)
     {
       packetHandler->getTxRxResult(dxl_comm_result);
