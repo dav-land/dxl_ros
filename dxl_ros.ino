@@ -1,6 +1,8 @@
 #include <DynamixelSDK.h>
 #include <ros.h>
 #include <std_msgs/Int16.h>
+#include <dynamixel/panTiltControl.h>
+#include <dynamixel/panTiltStatus.h>
 
 
 // Control table address MX-64
@@ -29,79 +31,55 @@
 
 #define ESC_ASCII_VALUE                 0x1b
 
-void onPanPos(const std_msgs::Int16 &pos);
-void onTiltPos(const std_msgs::Int16 &pos);
-void onPanSpeed(const std_msgs::Int16 &sp);
-void onTiltSpeed(const std_msgs::Int16 &sp);
+void onPanTiltControl(const dynamixel::panTiltControl &curCtl);
 
 //ROS integration
 
 ros::NodeHandle nh;
-std_msgs::Int16 dyna1_pos;
-std_msgs::Int16 dyna2_pos;
-std_msgs::Int16 dyna1_speed;
-std_msgs::Int16 dyna2_speed;
-ros::Publisher panPos("pan_cur_position", &dyna1_pos);
-ros::Publisher tiltPos("tilt_cur_position", &dyna2_pos);
-ros::Publisher panSpeed("pan_cur_speed", &dyna1_speed);
-ros::Publisher tiltSpeed("tilt_cur_speed", &dyna2_speed);
-ros::Subscriber<std_msgs::Int16> panGoal("pan_goal_position", &onPanPos);
-ros::Subscriber<std_msgs::Int16> tiltGoal("tilt_goal_position", &onTiltPos);
-ros::Subscriber<std_msgs::Int16> panSpeedGoal("pan_goal_speed", &onPanSpeed);
-ros::Subscriber<std_msgs::Int16> tiltSpeedGoal("tilt_goal_speed", &onTiltSpeed);
+
+dynamixel::panTiltStatus curStat;
+
+ros::Publisher panTiltStatus("pan_tilt_status", &curStat);
+ros::Subscriber<dynamixel::panTiltControl> panTiltControl("pan_tilt_control", &onPanTiltControl);
 
 
 char logBuffer[128];
 int pos1 = 2000, pos2 = 2000, speed1 = 0, speed2 = 0;
 
-void onPanPos(const std_msgs::Int16 &pos) {
-  pos1 = pos.data;
-  if (pos.data > 4095)
+
+void onPanTiltControl(const dynamixel::panTiltControl &curCtl) {
+  pos1 = curCtl.pan_position;
+  if (pos1 > 4095)
     pos1 = 4095;
-  if (pos.data < 0)
+  if (pos1 < 0)
     pos1 = 0;
-}
 
-void onTiltPos(const std_msgs::Int16 &pos) {
-  pos2 = pos.data;
-  if (pos.data > 3250)
+  pos2 = curCtl.tilt_position;
+  if (pos2 > 3250)
     pos2 = 3250;
-  if (pos.data < 750)
+  if (pos2 < 750)
     pos2 = 750;
-}
 
-void onPanSpeed(const std_msgs::Int16 &sp) {
-  speed1 = sp.data;
+  speed1 = curCtl.pan_max_speed;
   if (speed1 < 0)
     speed1 = 0;
   if (speed1 > 1023)
     speed1 = 1023;
-  //  sprintf(logBuffer, "Speed1: %d", speed1);
-  //  nh.loginfo(logBuffer);
-}
 
-void onTiltSpeed(const std_msgs::Int16 &sp) {
-  speed2 = sp.data;
+  speed2 = curCtl.tilt_max_speed;
   if (speed2 < 0)
     speed2 = 0;
   if (speed2 > 1023)
     speed2 = 1023;
-  //   sprintf(logBuffer, "Speed2: %d", speed2);
-  //  nh.loginfo(logBuffer);
 }
 
 void setup() {
 
   //ROS Setup
   nh.initNode();
-  nh.advertise(panPos);
-  nh.advertise(tiltPos);
-  nh.advertise(panSpeed);
-  nh.advertise(tiltSpeed);
-  nh.subscribe(panGoal);
-  nh.subscribe(tiltGoal);
-  nh.subscribe(panSpeedGoal);
-  nh.subscribe(tiltSpeedGoal);
+
+  nh.advertise(panTiltStatus);
+  nh.subscribe(panTiltControl);
 
   // put your setup code here, to run once:
   Serial.begin(BAUDRATE);
@@ -183,7 +161,7 @@ void setup() {
   while (1)
   {
 
-      // Write goal position
+    // Write goal position
     dxl_comm_result = packetHandler->write2ByteTxRx(portHandler, 1, ADDR_PRO_GOAL_POSITION, pos1, &dxl_error);
     if (dxl_comm_result != COMM_SUCCESS)
     {
@@ -204,7 +182,7 @@ void setup() {
       packetHandler->getRxPacketError(dxl_error);
     }
 
-        // Write goal speed
+    // Write goal speed
     dxl_comm_result = packetHandler->write2ByteTxRx(portHandler, 1, ADDR_PRO_MOVING_SPEED, speed1, &dxl_error);
     if (dxl_comm_result != COMM_SUCCESS)
     {
@@ -238,12 +216,12 @@ void setup() {
         packetHandler->getRxPacketError(dxl_error);
       }
 
-      //          nh.loginfo("[ID:1");
-      //          sprintf(logBuffer,"Goal Position: %d",pos1);
-      //          nh.loginfo(logBuffer);
-      //          sprintf(logBuffer,"Present Position: %d",dxl_present_position1);
-      //          nh.loginfo(logBuffer);
+      curStat.pan_position  = dxl_present_position1;
+      curStat.pan_speed     = dxl_present_speed1;
+      curStat.tilt_position = dxl_present_position2;
+      curStat.tilt_speed    = dxl_present_speed2;
 
+      panTiltStatus.publish(&curStat);
 
 
     } while ((abs(pos1 - dxl_present_position1) > DXL_MOVING_STATUS_THRESHOLD1));
@@ -259,12 +237,13 @@ void setup() {
       {
         packetHandler->getRxPacketError(dxl_error);
       }
+      curStat.pan_position  = dxl_present_position1;
+      curStat.pan_speed     = dxl_present_speed1;
+      curStat.tilt_position = dxl_present_position2;
+      curStat.tilt_speed    = dxl_present_speed2;
 
-      //         nh.loginfo("[ID:2");
-      //          sprintf(logBuffer,"Goal Position: %d",pos2);
-      //          nh.loginfo(logBuffer);
-      //          sprintf(logBuffer,"Present Position: %d",dxl_present_position2);
-      //          nh.loginfo(logBuffer);
+      panTiltStatus.publish(&curStat);
+
 
     } while ((abs(pos2 - dxl_present_position2) > DXL_MOVING_STATUS_THRESHOLD2));
 
@@ -290,14 +269,13 @@ void setup() {
     }
 
     //ROS
-    dyna1_pos.data = dxl_present_position1;
-    dyna2_pos.data = dxl_present_position2;
-    dyna1_speed.data = dxl_present_speed1;
-    dyna2_speed.data = dxl_present_speed2;
-    panPos.publish(&dyna1_pos);
-    tiltPos.publish(&dyna2_pos);
-    panSpeed.publish(&dyna1_speed);
-    tiltSpeed.publish(&dyna2_speed);
+    curStat.pan_position  = dxl_present_position1;
+    curStat.pan_speed     = dxl_present_speed1;
+    curStat.tilt_position = dxl_present_position2;
+    curStat.tilt_speed    = dxl_present_speed2;
+
+    panTiltStatus.publish(&curStat);
+
     nh.spinOnce();
   }
 
