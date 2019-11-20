@@ -44,7 +44,8 @@ ros::Subscriber<dynamixel::panTiltControl> panTiltControl("pan_tilt_control", &o
 
 
 char logBuffer[128];
-int pos1 = 2000, pos2 = 2000, speed1 = 0, speed2 = 0;
+int pos1 = 2000, pos2 = 2000, speed1 = 0, speed2 = 0, prevPos1 = -1, prevPos2 = -1, prevSpeed1 = -1, prevSpeed2 = -1;
+bool torque1 = true, torque2 = true, prevTorque1 = true, prevTorque2 = true;
 
 
 void onPanTiltControl(const dynamixel::panTiltControl &curCtl) {
@@ -71,6 +72,10 @@ void onPanTiltControl(const dynamixel::panTiltControl &curCtl) {
     speed2 = 0;
   if (speed2 > 1023)
     speed2 = 1023;
+
+  torque1 = curCtl.pan_torque;
+  torque2 = curCtl.tilt_torque;
+
 }
 
 void setup() {
@@ -161,46 +166,122 @@ void setup() {
   while (1)
   {
 
-    // Write goal position
-    dxl_comm_result = packetHandler->write2ByteTxRx(portHandler, 1, ADDR_PRO_GOAL_POSITION, pos1, &dxl_error);
-    if (dxl_comm_result != COMM_SUCCESS)
-    {
-      packetHandler->getTxRxResult(dxl_comm_result);
-    }
-    else if (dxl_error != 0)
-    {
-      packetHandler->getRxPacketError(dxl_error);
-    }
-    // Write goal position
-    dxl_comm_result = packetHandler->write2ByteTxRx(portHandler, 2, ADDR_PRO_GOAL_POSITION, pos2, &dxl_error);
-    if (dxl_comm_result != COMM_SUCCESS)
-    {
-      packetHandler->getTxRxResult(dxl_comm_result);
-    }
-    else if (dxl_error != 0)
-    {
-      packetHandler->getRxPacketError(dxl_error);
+    if (prevTorque1 != torque1 && torque1) {
+      // Enable Dynamixel Torque
+      dxl_comm_result = packetHandler->write1ByteTxRx(portHandler, 1, ADDR_PRO_TORQUE_ENABLE, TORQUE_ENABLE, &dxl_error);
+      if (dxl_comm_result != COMM_SUCCESS)
+      {
+        packetHandler->getTxRxResult(dxl_comm_result);
+      }
+      else if (dxl_error != 0)
+      {
+        packetHandler->getRxPacketError(dxl_error);
+      }
+      prevTorque1 = torque1;
     }
 
-    // Write goal speed
-    dxl_comm_result = packetHandler->write2ByteTxRx(portHandler, 1, ADDR_PRO_MOVING_SPEED, speed1, &dxl_error);
-    if (dxl_comm_result != COMM_SUCCESS)
-    {
-      packetHandler->getTxRxResult(dxl_comm_result);
+    if (prevTorque1 != torque1 && !torque1) {
+
+      // Disable Dynamixel Torque
+      dxl_comm_result = packetHandler->write1ByteTxRx(portHandler, 1, ADDR_PRO_TORQUE_ENABLE, TORQUE_DISABLE, &dxl_error);
+      if (dxl_comm_result != COMM_SUCCESS)
+      {
+        packetHandler->getTxRxResult(dxl_comm_result);
+      }
+      else if (dxl_error != 0)
+      {
+        packetHandler->getRxPacketError(dxl_error);
+      }
+
+      prevTorque1 = torque1;
     }
-    else if (dxl_error != 0)
-    {
-      packetHandler->getRxPacketError(dxl_error);
+
+    if (prevTorque2 != torque2 && torque2) {
+      dxl_comm_result = packetHandler->write1ByteTxRx(portHandler, 2, ADDR_PRO_TORQUE_ENABLE, TORQUE_ENABLE, &dxl_error);
+      if (dxl_comm_result != COMM_SUCCESS)
+      {
+        packetHandler->getTxRxResult(dxl_comm_result);
+      }
+      else if (dxl_error != 0)
+      {
+        packetHandler->getRxPacketError(dxl_error);
+      }
+
+      prevTorque2 = torque2;
     }
-    // Write goal speed
-    dxl_comm_result = packetHandler->write2ByteTxRx(portHandler, 2, ADDR_PRO_MOVING_SPEED, speed2, &dxl_error);
-    if (dxl_comm_result != COMM_SUCCESS)
-    {
-      packetHandler->getTxRxResult(dxl_comm_result);
+
+    if (prevTorque2 != torque2 && !torque2) {
+
+      // Disable Dynamixel Torque
+      dxl_comm_result = packetHandler->write1ByteTxRx(portHandler, 2, ADDR_PRO_TORQUE_ENABLE, TORQUE_DISABLE, &dxl_error);
+      if (dxl_comm_result != COMM_SUCCESS)
+      {
+        packetHandler->getTxRxResult(dxl_comm_result);
+      }
+      else if (dxl_error != 0)
+      {
+        packetHandler->getRxPacketError(dxl_error);
+      }
+
+      prevTorque2 = torque2;
     }
-    else if (dxl_error != 0)
-    {
-      packetHandler->getRxPacketError(dxl_error);
+
+    //Writes new goal pan position if a change is detected
+    if (prevPos1 != pos1) {
+      // Write goal position
+      dxl_comm_result = packetHandler->write2ByteTxRx(portHandler, 1, ADDR_PRO_GOAL_POSITION, pos1, &dxl_error);
+      if (dxl_comm_result != COMM_SUCCESS)
+      {
+        packetHandler->getTxRxResult(dxl_comm_result);
+      }
+      else if (dxl_error != 0)
+      {
+        packetHandler->getRxPacketError(dxl_error);
+      }
+      prevPos1 = pos1;
+    }
+
+    //Write new goal tilt position if a change is detected
+    if (prevPos2 != pos2) {
+      // Write goal position
+      dxl_comm_result = packetHandler->write2ByteTxRx(portHandler, 2, ADDR_PRO_GOAL_POSITION, pos2, &dxl_error);
+      if (dxl_comm_result != COMM_SUCCESS)
+      {
+        packetHandler->getTxRxResult(dxl_comm_result);
+      }
+      else if (dxl_error != 0)
+      {
+        packetHandler->getRxPacketError(dxl_error);
+      }
+      prevPos2 = pos2;
+    }
+
+    if (prevSpeed1 != speed1) {
+      // Write goal speed
+      dxl_comm_result = packetHandler->write2ByteTxRx(portHandler, 1, ADDR_PRO_MOVING_SPEED, speed1, &dxl_error);
+      if (dxl_comm_result != COMM_SUCCESS)
+      {
+        packetHandler->getTxRxResult(dxl_comm_result);
+      }
+      else if (dxl_error != 0)
+      {
+        packetHandler->getRxPacketError(dxl_error);
+      }
+      prevSpeed1 = speed1;
+    }
+
+    if (prevSpeed2 != speed2) {
+      // Write goal speed
+      dxl_comm_result = packetHandler->write2ByteTxRx(portHandler, 2, ADDR_PRO_MOVING_SPEED, speed2, &dxl_error);
+      if (dxl_comm_result != COMM_SUCCESS)
+      {
+        packetHandler->getTxRxResult(dxl_comm_result);
+      }
+      else if (dxl_error != 0)
+      {
+        packetHandler->getRxPacketError(dxl_error);
+      }
+      prevSpeed2 = speed2;
     }
 
     do
@@ -218,8 +299,10 @@ void setup() {
 
       curStat.pan_position  = dxl_present_position1;
       curStat.pan_speed     = dxl_present_speed1;
+      curStat.pan_torque    = torque1;
       curStat.tilt_position = dxl_present_position2;
       curStat.tilt_speed    = dxl_present_speed2;
+      curStat.tilt_torque   = torque2;
 
       panTiltStatus.publish(&curStat);
 
@@ -239,8 +322,10 @@ void setup() {
       }
       curStat.pan_position  = dxl_present_position1;
       curStat.pan_speed     = dxl_present_speed1;
+      curStat.pan_torque    = torque1;
       curStat.tilt_position = dxl_present_position2;
       curStat.tilt_speed    = dxl_present_speed2;
+      curStat.tilt_torque   = torque2;
 
       panTiltStatus.publish(&curStat);
 
@@ -271,8 +356,10 @@ void setup() {
     //ROS
     curStat.pan_position  = dxl_present_position1;
     curStat.pan_speed     = dxl_present_speed1;
+    curStat.pan_torque    = torque1;
     curStat.tilt_position = dxl_present_position2;
     curStat.tilt_speed    = dxl_present_speed2;
+    curStat.tilt_torque   = torque2;
 
     panTiltStatus.publish(&curStat);
 
