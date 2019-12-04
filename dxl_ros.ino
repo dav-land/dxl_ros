@@ -1,8 +1,8 @@
 #include <DynamixelSDK.h>
 #include <ros.h>
 #include <std_msgs/Int16.h>
-#include <dynamixel/panTiltControl.h>
-#include <dynamixel/panTiltStatus.h>
+#include <dynamixel/panTiltInternalControl.h>
+#include <dynamixel/panTiltInternalStatus.h>
 
 
 // Control table address MX-64
@@ -31,16 +31,16 @@
 
 #define ESC_ASCII_VALUE                 0x1b
 
-void onPanTiltControl(const dynamixel::panTiltControl &curCtl);
+void onpanTiltInternalControl(const dynamixel::panTiltInternalControl &curCtl);
 
 //ROS integration
 
 ros::NodeHandle nh;
 
-dynamixel::panTiltStatus curStat;
+dynamixel::panTiltInternalStatus curStat;
 
-ros::Publisher panTiltStatus("pan_tilt_status", &curStat);
-ros::Subscriber<dynamixel::panTiltControl> panTiltControl("pan_tilt_control", &onPanTiltControl);
+ros::Publisher panTiltInternalStatus("pan_tilt_internal_status", &curStat);
+ros::Subscriber<dynamixel::panTiltInternalControl> panTiltInternalControl("pan_tilt_internal_control", &onpanTiltInternalControl);
 
 
 char logBuffer[128];
@@ -48,7 +48,7 @@ int pos1 = 2000, pos2 = 2000, speed1 = 0, speed2 = 0, prevPos1 = -1, prevPos2 = 
 bool torque1 = true, torque2 = true, prevTorque1 = true, prevTorque2 = true;
 
 
-void onPanTiltControl(const dynamixel::panTiltControl &curCtl) {
+void onpanTiltInternalControl(const dynamixel::panTiltInternalControl &curCtl) {
   pos1 = curCtl.pan_position;
   if (pos1 > 4095)
     pos1 = 4095;
@@ -83,8 +83,8 @@ void setup() {
   //ROS Setup
   nh.initNode();
 
-  nh.advertise(panTiltStatus);
-  nh.subscribe(panTiltControl);
+  nh.advertise(panTiltInternalStatus);
+  nh.subscribe(panTiltInternalControl);
 
   // put your setup code here, to run once:
   Serial.begin(BAUDRATE);
@@ -298,13 +298,13 @@ void setup() {
       }
 
       curStat.pan_position  = dxl_present_position1;
-      curStat.pan_speed     = dxl_present_speed1;
+      curStat.pan_max_speed     = dxl_present_speed1;
       curStat.pan_torque    = torque1;
       curStat.tilt_position = dxl_present_position2;
-      curStat.tilt_speed    = dxl_present_speed2;
+      curStat.tilt_max_speed    = dxl_present_speed2;
       curStat.tilt_torque   = torque2;
 
-      panTiltStatus.publish(&curStat);
+      panTiltInternalStatus.publish(&curStat);
 
 
     } while ((abs(pos1 - dxl_present_position1) > DXL_MOVING_STATUS_THRESHOLD1));
@@ -321,13 +321,13 @@ void setup() {
         packetHandler->getRxPacketError(dxl_error);
       }
       curStat.pan_position  = dxl_present_position1;
-      curStat.pan_speed     = dxl_present_speed1;
+      curStat.pan_max_speed     = dxl_present_speed1;
       curStat.pan_torque    = torque1;
       curStat.tilt_position = dxl_present_position2;
-      curStat.tilt_speed    = dxl_present_speed2;
+      curStat.tilt_max_speed    = dxl_present_speed2;
       curStat.tilt_torque   = torque2;
 
-      panTiltStatus.publish(&curStat);
+      panTiltInternalStatus.publish(&curStat);
 
 
     } while ((abs(pos2 - dxl_present_position2) > DXL_MOVING_STATUS_THRESHOLD2));
@@ -355,13 +355,13 @@ void setup() {
 
     //ROS
     curStat.pan_position  = dxl_present_position1;
-    curStat.pan_speed     = dxl_present_speed1;
+    curStat.pan_max_speed     = dxl_present_speed1;
     curStat.pan_torque    = torque1;
     curStat.tilt_position = dxl_present_position2;
-    curStat.tilt_speed    = dxl_present_speed2;
+    curStat.tilt_max_speed    = dxl_present_speed2;
     curStat.tilt_torque   = torque2;
 
-    panTiltStatus.publish(&curStat);
+    panTiltInternalStatus.publish(&curStat);
 
     nh.spinOnce();
   }
