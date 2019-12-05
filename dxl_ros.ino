@@ -1,8 +1,8 @@
 #include <DynamixelSDK.h>
 #include <ros.h>
 #include <std_msgs/Int16.h>
-#include <dynamixel/panTiltInternalControl.h>
-#include <dynamixel/panTiltInternalStatus.h>
+#include <dynamixel_msg/PanTiltInternalControl.h>
+#include <dynamixel_msg/PanTiltInternalStatus.h>
 
 
 // Control table address MX-64
@@ -31,16 +31,16 @@
 
 #define ESC_ASCII_VALUE                 0x1b
 
-void onpanTiltInternalControl(const dynamixel::panTiltInternalControl &curCtl);
+void onPanTiltInternalControl(const dynamixel_msg::PanTiltInternalControl &curCtl);
 
 //ROS integration
 
 ros::NodeHandle nh;
 
-dynamixel::panTiltInternalStatus curStat;
+dynamixel_msg::PanTiltInternalStatus curStat;
 
-ros::Publisher panTiltInternalStatus("pan_tilt_internal_status", &curStat);
-ros::Subscriber<dynamixel::panTiltInternalControl> panTiltInternalControl("pan_tilt_internal_control", &onpanTiltInternalControl);
+ros::Publisher PanTiltInternalStatus("pan_tilt_internal_status", &curStat);
+ros::Subscriber<dynamixel_msg::PanTiltInternalControl> PanTiltInternalControl("pan_tilt_internal_control", &onPanTiltInternalControl);
 
 
 char logBuffer[128];
@@ -48,7 +48,7 @@ int pos1 = 2000, pos2 = 2000, speed1 = 0, speed2 = 0, prevPos1 = -1, prevPos2 = 
 bool torque1 = true, torque2 = true, prevTorque1 = true, prevTorque2 = true;
 
 
-void onpanTiltInternalControl(const dynamixel::panTiltInternalControl &curCtl) {
+void onPanTiltInternalControl(const dynamixel_msg::PanTiltInternalControl &curCtl) {
   pos1 = curCtl.pan_position;
   if (pos1 > 4095)
     pos1 = 4095;
@@ -83,8 +83,8 @@ void setup() {
   //ROS Setup
   nh.initNode();
 
-  nh.advertise(panTiltInternalStatus);
-  nh.subscribe(panTiltInternalControl);
+  nh.advertise(PanTiltInternalStatus);
+  nh.subscribe(PanTiltInternalControl);
 
   // put your setup code here, to run once:
   Serial.begin(BAUDRATE);
@@ -304,7 +304,7 @@ void setup() {
       curStat.tilt_max_speed    = dxl_present_speed2;
       curStat.tilt_torque   = torque2;
 
-      panTiltInternalStatus.publish(&curStat);
+      PanTiltInternalStatus.publish(&curStat);
 
 
     } while ((abs(pos1 - dxl_present_position1) > DXL_MOVING_STATUS_THRESHOLD1));
@@ -327,7 +327,7 @@ void setup() {
       curStat.tilt_max_speed    = dxl_present_speed2;
       curStat.tilt_torque   = torque2;
 
-      panTiltInternalStatus.publish(&curStat);
+      PanTiltInternalStatus.publish(&curStat);
 
 
     } while ((abs(pos2 - dxl_present_position2) > DXL_MOVING_STATUS_THRESHOLD2));
@@ -361,7 +361,7 @@ void setup() {
     curStat.tilt_max_speed    = dxl_present_speed2;
     curStat.tilt_torque   = torque2;
 
-    panTiltInternalStatus.publish(&curStat);
+    PanTiltInternalStatus.publish(&curStat);
 
     nh.spinOnce();
   }
