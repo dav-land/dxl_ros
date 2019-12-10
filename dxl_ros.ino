@@ -362,8 +362,8 @@ void setup() {
     curStat.tilt_torque   = torque2;
 
     PanTiltInternalStatus.publish(&curStat);
-
     nh.spinOnce();
+    delay(37);
   }
 
   // Disable Dynamixel Torque
