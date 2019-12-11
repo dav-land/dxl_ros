@@ -135,181 +135,73 @@ void setup() {
   }
 
   // Enable Dynamixel Torque
-  dxl_comm_result = packetHandler->write1ByteTxRx(portHandler, 1, ADDR_PRO_TORQUE_ENABLE, TORQUE_ENABLE, &dxl_error);
-  if (dxl_comm_result != COMM_SUCCESS)
-  {
-    packetHandler->getTxRxResult(dxl_comm_result);
-  }
-  else if (dxl_error != 0)
-  {
-    packetHandler->getRxPacketError(dxl_error);
-  }
-  else
-  {
-    nh.loginfo("Dynamixel 1 has been successfully connected \n");
-  }
-  dxl_comm_result = packetHandler->write1ByteTxRx(portHandler, 2, ADDR_PRO_TORQUE_ENABLE, TORQUE_ENABLE, &dxl_error);
-  if (dxl_comm_result != COMM_SUCCESS)
-  {
-    packetHandler->getTxRxResult(dxl_comm_result);
-  }
-  else if (dxl_error != 0)
-  {
-    packetHandler->getRxPacketError(dxl_error);
-  }
-  else
-  {
-    nh.loginfo("Dynamixel 2 has been successfully connected \n");
-  }
-
+  packetHandler->write1ByteTxRx(portHandler, 1, ADDR_PRO_TORQUE_ENABLE, TORQUE_ENABLE, &dxl_error);
+  packetHandler->write1ByteTxRx(portHandler, 2, ADDR_PRO_TORQUE_ENABLE, TORQUE_ENABLE, &dxl_error);
 
   while (1)
   {
 
     if (prevTorque1 != torque1 && torque1) {
-      // Enable Dynamixel Torque
-      dxl_comm_result = packetHandler->write1ByteTxRx(portHandler, 1, ADDR_PRO_TORQUE_ENABLE, TORQUE_ENABLE, &dxl_error);
-      if (dxl_comm_result != COMM_SUCCESS)
-      {
-        packetHandler->getTxRxResult(dxl_comm_result);
-      }
-      else if (dxl_error != 0)
-      {
-        packetHandler->getRxPacketError(dxl_error);
-      }
+      // Enable pan Torque
+      packetHandler->write1ByteTxRx(portHandler, 1, ADDR_PRO_TORQUE_ENABLE, TORQUE_ENABLE, &dxl_error);
       prevTorque1 = torque1;
     }
 
     if (prevTorque1 != torque1 && !torque1) {
-
-      // Disable Dynamixel Torque
-      dxl_comm_result = packetHandler->write1ByteTxRx(portHandler, 1, ADDR_PRO_TORQUE_ENABLE, TORQUE_DISABLE, &dxl_error);
-      if (dxl_comm_result != COMM_SUCCESS)
-      {
-        packetHandler->getTxRxResult(dxl_comm_result);
-      }
-      else if (dxl_error != 0)
-      {
-        packetHandler->getRxPacketError(dxl_error);
-      }
-
+      // Disable pan Torque
+      packetHandler->write1ByteTxRx(portHandler, 1, ADDR_PRO_TORQUE_ENABLE, TORQUE_DISABLE, &dxl_error);
       prevTorque1 = torque1;
     }
 
     if (prevTorque2 != torque2 && torque2) {
-      dxl_comm_result = packetHandler->write1ByteTxRx(portHandler, 2, ADDR_PRO_TORQUE_ENABLE, TORQUE_ENABLE, &dxl_error);
-      if (dxl_comm_result != COMM_SUCCESS)
-      {
-        packetHandler->getTxRxResult(dxl_comm_result);
-      }
-      else if (dxl_error != 0)
-      {
-        packetHandler->getRxPacketError(dxl_error);
-      }
-
+      //Enable tilt torque
+      packetHandler->write1ByteTxRx(portHandler, 2, ADDR_PRO_TORQUE_ENABLE, TORQUE_ENABLE, &dxl_error);
       prevTorque2 = torque2;
     }
 
     if (prevTorque2 != torque2 && !torque2) {
-
-      // Disable Dynamixel Torque
-      dxl_comm_result = packetHandler->write1ByteTxRx(portHandler, 2, ADDR_PRO_TORQUE_ENABLE, TORQUE_DISABLE, &dxl_error);
-      if (dxl_comm_result != COMM_SUCCESS)
-      {
-        packetHandler->getTxRxResult(dxl_comm_result);
-      }
-      else if (dxl_error != 0)
-      {
-        packetHandler->getRxPacketError(dxl_error);
-      }
-
+      // Disable tilt Torque
+      packetHandler->write1ByteTxRx(portHandler, 2, ADDR_PRO_TORQUE_ENABLE, TORQUE_DISABLE, &dxl_error);
       prevTorque2 = torque2;
     }
 
     //Writes new goal pan position if a change is detected
     if (prevPos1 != pos1) {
-      // Write goal position
-      dxl_comm_result = packetHandler->write2ByteTxRx(portHandler, 1, ADDR_PRO_GOAL_POSITION, pos1, &dxl_error);
-      if (dxl_comm_result != COMM_SUCCESS)
-      {
-        packetHandler->getTxRxResult(dxl_comm_result);
-      }
-      else if (dxl_error != 0)
-      {
-        packetHandler->getRxPacketError(dxl_error);
-      }
+      // Write goal pan position
+      packetHandler->write2ByteTxRx(portHandler, 1, ADDR_PRO_GOAL_POSITION, pos1, &dxl_error);
       prevPos1 = pos1;
     }
 
     //Write new goal tilt position if a change is detected
     if (prevPos2 != pos2) {
-      // Write goal position
-      dxl_comm_result = packetHandler->write2ByteTxRx(portHandler, 2, ADDR_PRO_GOAL_POSITION, pos2, &dxl_error);
-      if (dxl_comm_result != COMM_SUCCESS)
-      {
-        packetHandler->getTxRxResult(dxl_comm_result);
-      }
-      else if (dxl_error != 0)
-      {
-        packetHandler->getRxPacketError(dxl_error);
-      }
+      // Write goal tilt position
+      packetHandler->write2ByteTxRx(portHandler, 2, ADDR_PRO_GOAL_POSITION, pos2, &dxl_error);
       prevPos2 = pos2;
     }
 
     if (prevSpeed1 != speed1) {
       // Write goal speed
-      dxl_comm_result = packetHandler->write2ByteTxRx(portHandler, 1, ADDR_PRO_MOVING_SPEED, speed1, &dxl_error);
-      if (dxl_comm_result != COMM_SUCCESS)
-      {
-        packetHandler->getTxRxResult(dxl_comm_result);
-      }
-      else if (dxl_error != 0)
-      {
-        packetHandler->getRxPacketError(dxl_error);
-      }
+      packetHandler->write2ByteTxRx(portHandler, 1, ADDR_PRO_MOVING_SPEED, speed1, &dxl_error);
+
       prevSpeed1 = speed1;
     }
 
     if (prevSpeed2 != speed2) {
       // Write goal speed
-      dxl_comm_result = packetHandler->write2ByteTxRx(portHandler, 2, ADDR_PRO_MOVING_SPEED, speed2, &dxl_error);
-      if (dxl_comm_result != COMM_SUCCESS)
-      {
-        packetHandler->getTxRxResult(dxl_comm_result);
-      }
-      else if (dxl_error != 0)
-      {
-        packetHandler->getRxPacketError(dxl_error);
-      }
+      packetHandler->write2ByteTxRx(portHandler, 2, ADDR_PRO_MOVING_SPEED, speed2, &dxl_error);
       prevSpeed2 = speed2;
     }
 
-  //Read present Position
-    dxl_comm_result = packetHandler->read2ByteTxRx(portHandler, 1, ADDR_PRO_PRESENT_POSITION, (uint16_t*)&dxl_present_position1, &dxl_error);
-    dxl_comm_result = packetHandler->read2ByteTxRx(portHandler, 2, ADDR_PRO_PRESENT_POSITION, (uint16_t*)&dxl_present_position2, &dxl_error);
-
+    //Read present Position
+    packetHandler->read2ByteTxRx(portHandler, 1, ADDR_PRO_PRESENT_POSITION, (uint16_t*)&dxl_present_position1, &dxl_error);
+    packetHandler->read2ByteTxRx(portHandler, 2, ADDR_PRO_PRESENT_POSITION, (uint16_t*)&dxl_present_position2, &dxl_error);
     // Read present speed 1
-    dxl_comm_result = packetHandler->read2ByteTxRx(portHandler, 1, ADDR_PRO_PRESENT_SPEED, (uint16_t*)&dxl_present_speed1, &dxl_error);
-    if (dxl_comm_result != COMM_SUCCESS)
-    {
-      packetHandler->getTxRxResult(dxl_comm_result);
-    }
-    else if (dxl_error != 0)
-    {
-      packetHandler->getRxPacketError(dxl_error);
-    }
+    packetHandler->read2ByteTxRx(portHandler, 1, ADDR_PRO_PRESENT_SPEED, (uint16_t*)&dxl_present_speed1, &dxl_error);
     // Read present speed 2
-    dxl_comm_result = packetHandler->read2ByteTxRx(portHandler, 2, ADDR_PRO_PRESENT_SPEED, (uint16_t*)&dxl_present_speed2, &dxl_error);
-    if (dxl_comm_result != COMM_SUCCESS)
-    {
-      packetHandler->getTxRxResult(dxl_comm_result);
-    }
-    else if (dxl_error != 0)
-    {
-      packetHandler->getRxPacketError(dxl_error);
-    }
+    packetHandler->read2ByteTxRx(portHandler, 2, ADDR_PRO_PRESENT_SPEED, (uint16_t*)&dxl_present_speed2, &dxl_error);
 
     //ROS
+    curStat.header.stamp = nh.now();
     curStat.pan_position  = dxl_present_position1;
     curStat.pan_max_speed     = dxl_present_speed1;
     curStat.pan_torque    = torque1;
@@ -319,29 +211,15 @@ void setup() {
 
     PanTiltInternalStatus.publish(&curStat);
     nh.spinOnce();
-   delay(5);
+    delay(15);
+    nh.spinOnce();
   }
 
   // Disable Dynamixel Torque
-  dxl_comm_result = packetHandler->write1ByteTxRx(portHandler, 1, ADDR_PRO_TORQUE_ENABLE, TORQUE_DISABLE, &dxl_error);
-  if (dxl_comm_result != COMM_SUCCESS)
-  {
-    packetHandler->getTxRxResult(dxl_comm_result);
-  }
-  else if (dxl_error != 0)
-  {
-    packetHandler->getRxPacketError(dxl_error);
-  }
+  packetHandler->write1ByteTxRx(portHandler, 1, ADDR_PRO_TORQUE_ENABLE, TORQUE_DISABLE, &dxl_error);
+
   // Disable Dynamixel Torque
-  dxl_comm_result = packetHandler->write1ByteTxRx(portHandler, 2, ADDR_PRO_TORQUE_ENABLE, TORQUE_DISABLE, &dxl_error);
-  if (dxl_comm_result != COMM_SUCCESS)
-  {
-    packetHandler->getTxRxResult(dxl_comm_result);
-  }
-  else if (dxl_error != 0)
-  {
-    packetHandler->getRxPacketError(dxl_error);
-  }
+  packetHandler->write1ByteTxRx(portHandler, 2, ADDR_PRO_TORQUE_ENABLE, TORQUE_DISABLE, &dxl_error);
 
   // Close port
   portHandler->closePort();
