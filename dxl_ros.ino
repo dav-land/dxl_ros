@@ -16,8 +16,8 @@
 #define PROTOCOL_VERSION                1.0                 // See which protocol version is used in the Dynamixel
 
 
-#define BAUDRATE                        57600
-#define DEVICENAME                      "/dev/ttyACM0"   // Check which port is being used on your controller
+#define BAUDRATE                        1000000
+#define DEVICENAME                      "1"   // Check which port is being used on your controller
 // ex) Windows: "COM1"   Linux: "/dev/ttyUSB0"
 
 #define TORQUE_ENABLE                   1                   // Value for enabling the torque
@@ -40,12 +40,12 @@ ros::NodeHandle nh;
 dynamixel_msg::PanTiltInternalStatus curStat;
 
 ros::Publisher PanTiltInternalStatus("pan_tilt_internal_status", &curStat);
-ros::Subscriber<dynamixel_msg::PanTiltInternalControl> PanTiltInternalControl("pan_tilt_internal_control", &onPanTiltInternalControl);
+ros::Subscriber<dynamixel_msg::PanTiltInternalControl> PanTiltInternalControl("pan_tilt_internal_control", &onPanTiltInternalControl, 1);
 
 
 char logBuffer[128];
 int pos1 = 2000, pos2 = 2000, speed1 = 0, speed2 = 0, prevPos1 = -1, prevPos2 = -1, prevSpeed1 = -1, prevSpeed2 = -1;
-bool torque1 = true, torque2 = true, prevTorque1 = true, prevTorque2 = true;
+bool torque1 = true, torque2 = true, prevTorque1 = true, prevTorque2 = true, publish = false;
 
 
 void onPanTiltInternalControl(const dynamixel_msg::PanTiltInternalControl &curCtl) {
@@ -284,53 +284,9 @@ void setup() {
       prevSpeed2 = speed2;
     }
 
-    do
-    {
-      // Read present position
-      dxl_comm_result = packetHandler->read2ByteTxRx(portHandler, 1, ADDR_PRO_PRESENT_POSITION, (uint16_t*)&dxl_present_position1, &dxl_error);
-      if (dxl_comm_result != COMM_SUCCESS)
-      {
-        packetHandler->getTxRxResult(dxl_comm_result);
-      }
-      else if (dxl_error != 0)
-      {
-        packetHandler->getRxPacketError(dxl_error);
-      }
-
-      curStat.pan_position  = dxl_present_position1;
-      curStat.pan_max_speed     = dxl_present_speed1;
-      curStat.pan_torque    = torque1;
-      curStat.tilt_position = dxl_present_position2;
-      curStat.tilt_max_speed    = dxl_present_speed2;
-      curStat.tilt_torque   = torque2;
-
-      PanTiltInternalStatus.publish(&curStat);
-
-
-    } while ((abs(pos1 - dxl_present_position1) > DXL_MOVING_STATUS_THRESHOLD1));
-    do
-    {
-      // Read present position
-      dxl_comm_result = packetHandler->read2ByteTxRx(portHandler, 2, ADDR_PRO_PRESENT_POSITION, (uint16_t*)&dxl_present_position2, &dxl_error);
-      if (dxl_comm_result != COMM_SUCCESS)
-      {
-        packetHandler->getTxRxResult(dxl_comm_result);
-      }
-      else if (dxl_error != 0)
-      {
-        packetHandler->getRxPacketError(dxl_error);
-      }
-      curStat.pan_position  = dxl_present_position1;
-      curStat.pan_max_speed     = dxl_present_speed1;
-      curStat.pan_torque    = torque1;
-      curStat.tilt_position = dxl_present_position2;
-      curStat.tilt_max_speed    = dxl_present_speed2;
-      curStat.tilt_torque   = torque2;
-
-      PanTiltInternalStatus.publish(&curStat);
-
-
-    } while ((abs(pos2 - dxl_present_position2) > DXL_MOVING_STATUS_THRESHOLD2));
+  //Read present Position
+    dxl_comm_result = packetHandler->read2ByteTxRx(portHandler, 1, ADDR_PRO_PRESENT_POSITION, (uint16_t*)&dxl_present_position1, &dxl_error);
+    dxl_comm_result = packetHandler->read2ByteTxRx(portHandler, 2, ADDR_PRO_PRESENT_POSITION, (uint16_t*)&dxl_present_position2, &dxl_error);
 
     // Read present speed 1
     dxl_comm_result = packetHandler->read2ByteTxRx(portHandler, 1, ADDR_PRO_PRESENT_SPEED, (uint16_t*)&dxl_present_speed1, &dxl_error);
@@ -363,7 +319,7 @@ void setup() {
 
     PanTiltInternalStatus.publish(&curStat);
     nh.spinOnce();
-    delay(37);
+   delay(5);
   }
 
   // Disable Dynamixel Torque
