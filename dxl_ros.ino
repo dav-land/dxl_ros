@@ -1,6 +1,7 @@
 #include <DynamixelSDK.h>
 #include <ros.h>
 #include <std_msgs/Int16.h>
+#include <std_msgs/Bool.h>
 #include <dynamixel_msg/PanTiltInternalControl.h>
 #include <dynamixel_msg/PanTiltInternalStatus.h>
 
@@ -28,10 +29,12 @@
 #define DXL_MINIMUM_POSITION_VALUE2      775                 // Dynamixel will rotate between this value
 #define DXL_MAXIMUM_POSITION_VALUE2      3250                // and this value (note that the Dynamixel would not move when the position value is out of movable range. Check e-manual about the range of the Dynamixel you use.)
 #define DXL_MOVING_STATUS_THRESHOLD2     5                  // Dynamixel moving status threshold
+#define RESET_PIN                        A0
 
 #define ESC_ASCII_VALUE                 0x1b
 
 void onPanTiltInternalControl(const dynamixel_msg::PanTiltInternalControl &curCtl);
+void onPanTiltReset(const std_msgs::Bool &rst);
 
 //ROS integration
 
@@ -41,11 +44,12 @@ dynamixel_msg::PanTiltInternalStatus curStat;
 
 ros::Publisher PanTiltInternalStatus("pan_tilt_internal_status", &curStat);
 ros::Subscriber<dynamixel_msg::PanTiltInternalControl> PanTiltInternalControl("pan_tilt_internal_control", &onPanTiltInternalControl, 1);
+ros::Subscriber<std_msgs::Bool> PanTiltReset("pan_tilt_reset", &onPanTiltReset, 1);
 
 
 char logBuffer[128];
 int pos1 = 2000, pos2 = 2000, speed1 = 0, speed2 = 0, prevPos1 = -1, prevPos2 = -1, prevSpeed1 = -1, prevSpeed2 = -1;
-bool torque1 = true, torque2 = true, prevTorque1 = true, prevTorque2 = true, publish = false;
+bool torque1 = true, torque2 = true, prevTorque1 = true, prevTorque2 = true, publish = false, reset = false;
 
 
 void onPanTiltInternalControl(const dynamixel_msg::PanTiltInternalControl &curCtl) {
@@ -78,13 +82,21 @@ void onPanTiltInternalControl(const dynamixel_msg::PanTiltInternalControl &curCt
 
 }
 
+void onPanTiltReset(const std_msgs::Bool &rst) {
+  reset = rst.data;
+}
+
 void setup() {
+
+  pinMode(RESET_PIN, OUTPUT);
+  digitalWrite(RESET_PIN, HIGH);
 
   //ROS Setup
   nh.initNode();
 
   nh.advertise(PanTiltInternalStatus);
   nh.subscribe(PanTiltInternalControl);
+  nh.subscribe(PanTiltReset);
 
   // put your setup code here, to run once:
   Serial.begin(BAUDRATE);
@@ -140,6 +152,11 @@ void setup() {
 
   while (1)
   {
+
+    if (reset) {
+      nh.loginfo("Setting pin to low");
+      digitalWrite(RESET_PIN, LOW);
+    }
 
     if (prevTorque1 != torque1 && torque1) {
       // Enable pan Torque
